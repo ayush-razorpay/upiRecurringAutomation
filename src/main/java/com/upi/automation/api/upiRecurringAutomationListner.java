@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-
 @RestController
 public class upiRecurringAutomationListner {
 
@@ -28,18 +26,24 @@ public class upiRecurringAutomationListner {
     }
 
     @PostMapping("/authorize")
-    public ResponseEntity authorize(@RequestParam("runid") String runid) {
-//        this.upiRecurringAutomation.createAuthorization(vpa, this.customerId,null);
+    public ResponseEntity authorize(@RequestParam("runid") String runid) throws Exception {
         caseExecutor.requestAuthorizations(runid);
-        return ResponseEntity.ok("up and running");
+        return ResponseEntity.ok("Request is complete");
 
     }
 
-    //
     @PostMapping("/update-auth-status")
-    public ResponseEntity updateAuthStatus(@RequestParam("runid") String runid) throws IOException {
+    public ResponseEntity updateAuthStatus(@RequestParam("runid") String runid) throws Exception {
         caseExecutor.checkSubscriptionAuhStatus(runid);
-        return ResponseEntity.ok("up and running");
+        return ResponseEntity.ok("Request is complete");
+
+    }
+
+    @PostMapping("/create-subsequent-debit")
+    public ResponseEntity createSubsequentDebit(@RequestParam("runid") String runid,
+                                                @RequestParam("frequency") String frequency) throws Exception {
+        caseExecutor.checkSubscriptionAuhStatus(runid);
+        return ResponseEntity.ok("Request is complete");
 
     }
 

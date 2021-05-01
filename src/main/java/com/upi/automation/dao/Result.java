@@ -34,6 +34,9 @@ public class Result {
     private String umn;
     private String psp;
     private String comments;
-
     private String runId;
+
+    public void addComments(String comments) {
+        this.comments = this.comments + "\n" + comments;
+    }
 }

@@ -1,10 +1,10 @@
 package com.upi.automation.service;
 
-import java.io.IOException;
-
 public interface CaseExecutor {
 
-    public void requestAuthorizations(String runId);
+    public void requestAuthorizations(String runId) throws Exception;
 
-    public void checkSubscriptionAuhStatus(String runId) throws IOException;
+    public void checkSubscriptionAuhStatus(String runId) throws Exception;
+
+
 }

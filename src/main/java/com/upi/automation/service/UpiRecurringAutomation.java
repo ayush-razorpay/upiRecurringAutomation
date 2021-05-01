@@ -7,12 +7,11 @@ import org.springframework.stereotype.Component;
 @Component
 public interface UpiRecurringAutomation {
 
-    String checkAuthStatus(String customerId, String tokenId) throws Exception;
 
     String createAuthorization(String vpa, String customerId, Result resultModel,
                                TestCase.SubscriptionFrequency frequency);
 
-    String createSubsequentDebit();
+    public String createSubsequentDebit(Result result) throws Exception;
 
 
 }

@@ -2,11 +2,9 @@ package com.upi.automation.service.impl;
 
 import com.upi.automation.dao.Result;
 import com.upi.automation.dao.TestCase;
-import com.upi.automation.dao.repository.TestCaseRepository;
 import com.upi.automation.service.UpiRecurringAutomation;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -19,15 +17,6 @@ import static com.upi.automation.config.AutomationConfig.*;
 public class UpiRecurringAutomationImpl implements UpiRecurringAutomation {
 
 
-    @Autowired
-    TestCaseRepository repository;
-
-
-    @Override
-    public String checkAuthStatus(String customerId, String tokenId) throws Exception {
-        return null;
-    }
-
     @Override
     public String createAuthorization(String vpa, String customerId, Result resultModel, TestCase.SubscriptionFrequency frequency) {
         try {
@@ -35,23 +24,25 @@ public class UpiRecurringAutomationImpl implements UpiRecurringAutomation {
             resultModel.setTimeStamp(new Date());
 
 
-            String orderId = createOrderId(customerId, frequency);
+            String orderId = createRecurringPaymentOrderId(customerId, frequency);
             resultModel.setOrderId(orderId);
+            resultModel.addComments("orderId Generated : " + orderId);
+
 
             String paymentId = createPayment(orderId, customerId, vpa);
             resultModel.setPaymentId(paymentId);
+            resultModel.addComments("Payment Created : " + paymentId);
 
             String token = getTokenIdIfValid(paymentId);
+
+            resultModel.addComments("Token Created : " + token);
+
             resultModel.setTokenId(token);
         } catch (Exception e) {
             log.error("exception while creating authorization error : {} ", e);
+            resultModel.addComments("exception while creating authorization error stackTrace :" + e.getStackTrace()
+                    + "error :" + e.getMessage());
         }
-        return null;
-    }
-
-
-    @Override
-    public String createSubsequentDebit() {
         return null;
     }
 
@@ -88,7 +79,6 @@ public class UpiRecurringAutomationImpl implements UpiRecurringAutomation {
         String v1 = response.body().string();
 
         String paymentId = v1.substring(v1.indexOf("pay_"), v1.indexOf("\",\"gateway\":"));
-        System.out.println("paymentId-" + paymentId);
 
 
         if (paymentId == null || (paymentId.trim().isEmpty())) {
@@ -120,7 +110,7 @@ public class UpiRecurringAutomationImpl implements UpiRecurringAutomation {
 
     }
 
-    private String createOrderId(String customerId, TestCase.SubscriptionFrequency frequency) throws Exception {
+    private String createRecurringPaymentOrderId(String customerId, TestCase.SubscriptionFrequency frequency) throws Exception {
         OkHttpClient client = okHttpClient;
         MediaType mediaType = MediaType.parse(APPLICATION_JSON);
 
@@ -141,7 +131,7 @@ public class UpiRecurringAutomationImpl implements UpiRecurringAutomation {
         Response response = client.newCall(request).execute();
 
         if (response.code() != 200)
-            throw new Exception("unable to generate orderId :", new Exception(response.body().string()));
+            throw new Exception("unable to generate orderId for Authorization Debit:", new Exception(response.body().string()));
         Map t = objectMapper.readValue(response.body().string(), Map.class);
 
         String v = (String) t.get("id");
@@ -149,6 +139,57 @@ public class UpiRecurringAutomationImpl implements UpiRecurringAutomation {
         return v;
     }
 
+
+    private String createSubsequentDebitOrderId() throws Exception {
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse(APPLICATION_JSON);
+        RequestBody body = RequestBody.create(mediaType,
+                "{\n  \"amount\":200,\n  \"currency\":\"INR\"\n}\n");
+        Request request = new Request.Builder()
+                .url(HTTPS_API_RAZORPAY_COM_V_1 + "/orders")
+                .method("POST", body)
+                .addHeader(AUTHORIZATION, basicAuthBase64Encode)
+                .addHeader("Content-Type", APPLICATION_JSON)
+                .build();
+        Response response = client.newCall(request).execute();
+        if (response.code() != 200)
+            throw new Exception("unable to generate orderId for subsequentDebit:", new Exception(response.body().string()));
+        Map t = objectMapper.readValue(response.body().string(), Map.class);
+
+        String v = (String) t.get("id");
+
+        return v;
+    }
+
+
+    //todo:this still doent work. have to complete this
+    @Override
+    public String createSubsequentDebit(Result result) throws Exception {
+        String orderId = this.createSubsequentDebitOrderId();
+
+        OkHttpClient client = okHttpClient;
+        MediaType mediaType = MediaType.parse(APPLICATION_JSON);
+        RequestBody body = RequestBody.create(mediaType,
+                "{\n    \"amount\": 200,\n " +
+                        "   \"email\": \"abc@xyz.com\",\n " +
+                        "   \"currency\": \"INR\",\n   " +
+                        " \"order_id\": \"" + orderId + "\",\n  " +
+                        "  \"customer_id\": \"" + result.getCustomerId() + "\",\n   " +
+                        " \"token\": \"" + result.getTokenId() + "\",\n  " +
+                        "  \"contact\": \"9896148608\",\n   " +
+                        " \"recurring\": \"1\",\n   " +
+                        " \"description\": \"Automation Testing\"\n}");
+        Request request = new Request.Builder()
+                .url(HTTPS_API_RAZORPAY_COM_V_1 + "/payments/create/recurring")
+                .method("POST", body)
+                .addHeader(AUTHORIZATION, basicAuthBase64Encode)
+                .addHeader("Content-Type", APPLICATION_JSON)
+                .build();
+        Response response = client.newCall(request).execute();
+
+        return null;
+    }
 
 }
 
