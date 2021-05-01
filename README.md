@@ -1,1 +1,1 @@
-# upiRecurringAutomation
+# upi-recurring-automation
