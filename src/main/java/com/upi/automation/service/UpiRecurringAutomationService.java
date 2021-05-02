@@ -5,7 +5,7 @@ import com.upi.automation.dao.TestCase;
 import org.springframework.stereotype.Component;
 
 @Component
-public interface UpiRecurringAutomation {
+public interface UpiRecurringAutomationService {
 
 
     String createAuthorization(String vpa, String customerId, Result resultModel,

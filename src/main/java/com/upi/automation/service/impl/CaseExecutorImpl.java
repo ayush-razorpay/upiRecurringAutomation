@@ -5,7 +5,7 @@ import com.upi.automation.dao.TestCase;
 import com.upi.automation.dao.repository.TestCaseRepository;
 import com.upi.automation.dao.repository.TestResultRepository;
 import com.upi.automation.service.CaseExecutor;
-import com.upi.automation.service.UpiRecurringAutomation;
+import com.upi.automation.service.UpiRecurringAutomationService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import okhttp3.OkHttpClient;
@@ -29,7 +29,7 @@ public class CaseExecutorImpl implements CaseExecutor {
     @Autowired
     TestResultRepository resultRepository;
     @Autowired
-    UpiRecurringAutomation upiRecurringAutomation;
+    UpiRecurringAutomationService upiRecurringAutomation;
 
 
     @Override
@@ -40,7 +40,7 @@ public class CaseExecutorImpl implements CaseExecutor {
                 .collect(Collectors.toList());
 
         log.info("total cases fetach for execution  : {}", cases.size());
-        //diplay count and then execute one by one
+        //display count and then execute one by one
 
         for (TestCase testCase : cases) {
             Result r = new Result();
@@ -87,7 +87,7 @@ public class CaseExecutorImpl implements CaseExecutor {
                     r.addComments("token is valid");
                 }
             } catch (Exception e) {
-                log.error("exception while trying to check toke status for testResult id : {}, exception :{}", r.getId(), e);
+                log.error("exception while trying to check token status for testResult id : {}, exception :{}", r.getId(), e);
                 r.addComments("exception while trying to check toke status for testResult id :" + r.getId() +
                         ", exception stackTrace:{}" + e.getStackTrace() + ", error : " + e.getMessage());
                 throw e;
@@ -97,5 +97,29 @@ public class CaseExecutorImpl implements CaseExecutor {
         }
     }
 
+    @Override
+    public void createSubsequentDebits(String runId, TestCase.SubscriptionFrequency frequency) throws Exception {
+
+        List<Result> dat = this.resultRepository.findAll().stream()
+                .filter(x -> x.getRunId().equalsIgnoreCase(runId)
+                        &&
+                        x.getFrequency().equalsIgnoreCase(frequency.toString()))
+                .collect(Collectors.toList());
+
+        for (Result r : dat) {
+            try {
+                this.upiRecurringAutomation.createSubsequentDebit(r);
+            } catch (Exception e) {
+                log.error("exception while createSubsequentDebit id : {}, exception :{}", r.getId(), e);
+                r.addComments("exception while exception while createSubsequentDebit " +
+                        "for testResult id :" + r.getId() +
+                        ", exception stackTrace:{}" + e.getStackTrace() + ", error : " + e.getMessage());
+                throw e;
+            } finally {
+                resultRepository.save(r);
+            }
+
+        }
+    }
 
 }

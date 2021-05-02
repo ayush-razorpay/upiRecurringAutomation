@@ -2,7 +2,7 @@ package com.upi.automation.service.impl;
 
 import com.upi.automation.dao.Result;
 import com.upi.automation.dao.TestCase;
-import com.upi.automation.service.UpiRecurringAutomation;
+import com.upi.automation.service.UpiRecurringAutomationService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import static com.upi.automation.config.AutomationConfig.*;
 
 @Slf4j
 @Service
-public class UpiRecurringAutomationImpl implements UpiRecurringAutomation {
+public class UpiRecurringAutomationServiceImpl implements UpiRecurringAutomationService {
 
 
     @Override
@@ -163,7 +163,7 @@ public class UpiRecurringAutomationImpl implements UpiRecurringAutomation {
     }
 
 
-    //todo:this still doent work. have to complete this
+    //todo:this still doent work. have to complete this, getPaymentId or orderId and check it its paid
     @Override
     public String createSubsequentDebit(Result result) throws Exception {
         String orderId = this.createSubsequentDebitOrderId();
