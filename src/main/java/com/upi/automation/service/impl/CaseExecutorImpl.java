@@ -33,7 +33,7 @@ public class CaseExecutorImpl implements CaseExecutor {
 
 
     @Override
-    public void requestAuthorizations(String runId) throws Exception {
+    public List requestAuthorizations(String runId) throws Exception {
         //fetch the data from table
         List<TestCase> cases = this.testCaseRepository.findAll().stream()
                 .filter(x -> x.getIsEnabled().equalsIgnoreCase("y"))
@@ -59,18 +59,26 @@ public class CaseExecutorImpl implements CaseExecutor {
                 this.resultRepository.save(r);
             }
         }
+        return cases;
     }
 
     @Override
-    public void checkSubscriptionAuhStatus(String runId) throws Exception {
+    public List checkSubscriptionAuhStatus(String runId) throws Exception {
         //fetch all the tokens for a customer id and the check status and update
         OkHttpClient client = okHttpClient;
         Request request = new Request.Builder()
-                .url(HTTPS_API_RAZORPAY_COM_V_1 + "v1/customers/" + customerId + "/tokens")
+                .url(HTTPS_API_RAZORPAY_COM_V_1 + "/customers/" + customerId + "/tokens")
                 .method("GET", null)
                 .addHeader(AUTHORIZATION, basicAuthBase64Encode)
                 .build();
         Response response = client.newCall(request).execute();
+
+        if(response.code() != 200){
+            log.error("Error no token found for the customerId + "+ customerId +" . response :"+response.body()
+                    +" ResponseCode"+response.code());
+            throw new Exception("Error no token found for the customerId + "+ customerId +" . response :"+response.body()
+                    +" ResponseCode"+response.code());
+        }
 
         Map t = objectMapper.readValue(response.body().string(), Map.class);
 
@@ -81,7 +89,7 @@ public class CaseExecutorImpl implements CaseExecutor {
 
         for (Result r : dat) {
             try {
-                var list = validTokens.stream().filter(x -> x.get("id").equals(r.getTokenId())).collect(Collectors.toList());
+                List list = validTokens.stream().filter(x -> x.get("id").equals(r.getTokenId())).collect(Collectors.toList());
                 if (list.size() > 0) {
                     r.setMandateCreationStatus("success");
                     r.addComments("token is valid");
@@ -95,10 +103,11 @@ public class CaseExecutorImpl implements CaseExecutor {
                 resultRepository.save(r);
             }
         }
+        return dat;
     }
 
     @Override
-    public void createSubsequentDebits(String runId, TestCase.SubscriptionFrequency frequency) throws Exception {
+    public List createSubsequentDebits(String runId, TestCase.SubscriptionFrequency frequency) throws Exception {
 
         List<Result> dat = this.resultRepository.findAll().stream()
                 .filter(x -> x.getRunId().equalsIgnoreCase(runId)
@@ -120,6 +129,8 @@ public class CaseExecutorImpl implements CaseExecutor {
             }
 
         }
+
+        return dat;
     }
 
 }

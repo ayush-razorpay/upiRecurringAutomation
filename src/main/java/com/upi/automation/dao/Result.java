@@ -7,6 +7,7 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import java.util.Date;
 
 @Data
@@ -33,6 +34,8 @@ public class Result {
     private String orderId;
     private String umn;
     private String psp;
+
+    @Lob
     private String comments;
     private String runId;
 
