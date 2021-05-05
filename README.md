@@ -6,6 +6,7 @@ SIMPLR UTIL TO TEST UPI RECURRING AUTOPAY
 
 
 databse query url - http://localhost:<port>/h2-console/
+  
 swagger docs - http://localhost:<port>/swagger-ui/index.html
   
   
