@@ -24,6 +24,7 @@ import static com.upi.automation.config.AutomationConfig.*;
 @Component
 public class CaseExecutorImpl implements CaseExecutor {
 
+    public static final String Y = "y";
     @Autowired
     TestCaseRepository testCaseRepository;
     @Autowired
@@ -36,10 +37,10 @@ public class CaseExecutorImpl implements CaseExecutor {
     public List requestAuthorizations(String runId) throws Exception {
         //fetch the data from table
         List<TestCase> cases = this.testCaseRepository.findAll().stream()
-                .filter(x -> x.getIsEnabled().equalsIgnoreCase("y"))
+                .filter(x -> x.getIsEnabled().equalsIgnoreCase(Y))
                 .collect(Collectors.toList());
 
-        log.info("total cases fetach for execution  : {}", cases.size());
+        log.info("total cases fetched for execution  : {}", cases.size());
         //display count and then execute one by one
 
         for (TestCase testCase : cases) {
